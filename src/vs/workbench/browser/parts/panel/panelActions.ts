@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import 'vs/css!./media/panelpart';
-import nls = require('vs/nls');
+import * as nls from 'vs/nls';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { KeyMod, KeyCode } from 'vs/base/common/keyCodes';
@@ -18,7 +18,7 @@ import { ActivityAction } from 'vs/workbench/browser/parts/compositebar/composit
 import { IActivity } from 'vs/workbench/common/activity';
 
 export class ClosePanelAction extends Action {
-	static ID = 'workbench.action.closePanel';
+	static readonly ID = 'workbench.action.closePanel';
 	static LABEL = nls.localize('closePanel', "Close Panel");
 
 	constructor(
@@ -35,7 +35,7 @@ export class ClosePanelAction extends Action {
 }
 
 export class TogglePanelAction extends Action {
-	static ID = 'workbench.action.togglePanel';
+	static readonly ID = 'workbench.action.togglePanel';
 	static LABEL = nls.localize('togglePanel', "Toggle Panel");
 
 	constructor(

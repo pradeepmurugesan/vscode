@@ -5,12 +5,12 @@
 'use strict';
 
 import URI from 'vs/base/common/uri';
-import nls = require('vs/nls');
+import * as nls from 'vs/nls';
 import * as Paths from 'path';
-import Json = require('vs/base/common/json');
+import * as Json from 'vs/base/common/json';
 import { ExtensionData, IThemeExtensionPoint, IFileIconTheme } from 'vs/workbench/services/themes/common/workbenchThemeService';
 import { TPromise } from 'vs/base/common/winjs.base';
-import pfs = require('vs/base/node/pfs');
+import * as pfs from 'vs/base/node/pfs';
 import { WorkbenchThemeService } from 'vs/workbench/services/themes/electron-browser/workbenchThemeService';
 import { getParseErrorMessage } from 'vs/base/common/jsonErrorMessages';
 
@@ -244,6 +244,9 @@ function _processIconThemeDocument(id: string, iconThemeDocumentPath: string, ic
 
 			let languageIds = associations.languageIds;
 			if (languageIds) {
+				if (!languageIds.jsonc && languageIds.json) {
+					languageIds.jsonc = languageIds.json;
+				}
 				for (let languageId in languageIds) {
 					addSelector(`${qualifier} .${escapeCSS(languageId)}-lang-file-icon.file-icon::before`, languageIds[languageId]);
 					result.hasFileIcons = true;

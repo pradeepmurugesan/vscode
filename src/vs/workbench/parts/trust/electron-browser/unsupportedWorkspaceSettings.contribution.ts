@@ -7,19 +7,14 @@
 
 import * as nls from 'vs/nls';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
-import { TPromise } from 'vs/base/common/winjs.base';
-import { Action } from 'vs/base/common/actions';
 import { IWorkbenchContributionsRegistry, IWorkbenchContribution, Extensions as WorkbenchExtensions } from 'vs/workbench/common/contributions';
 import { Registry } from 'vs/platform/registry/common/platform';
 import { ILifecycleService, LifecyclePhase } from 'vs/platform/lifecycle/common/lifecycle';
-import { IMessageService, Severity } from 'vs/platform/message/common/message';
-import { IPreferencesService } from 'vs/workbench/parts/preferences/common/preferences';
+import { IPreferencesService } from 'vs/workbench/services/preferences/common/preferences';
 import { IWorkspaceConfigurationService } from 'vs/workbench/services/configuration/common/configuration';
-import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { IStorageService, StorageScope } from 'vs/platform/storage/common/storage';
 import { IWorkspaceContextService } from 'vs/platform/workspace/common/workspace';
-
-
+import { Severity, INotificationService } from 'vs/platform/notification/common/notification';
 
 class UnsupportedWorkspaceSettingsContribution implements IWorkbenchContribution {
 
@@ -32,9 +27,8 @@ class UnsupportedWorkspaceSettingsContribution implements IWorkbenchContribution
 		@IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
 		@IWorkspaceConfigurationService private workspaceConfigurationService: IWorkspaceConfigurationService,
 		@IPreferencesService private preferencesService: IPreferencesService,
-		@IMessageService private messageService: IMessageService,
-		@ITelemetryService private telemetryService: ITelemetryService,
-		@IStorageService private storageService: IStorageService
+		@IStorageService private storageService: IStorageService,
+		@INotificationService private notificationService: INotificationService
 	) {
 		lifecycleService.onShutdown(this.dispose, this);
 		this.toDispose.push(this.workspaceConfigurationService.onDidChangeConfiguration(e => this.checkWorkspaceSettings()));
@@ -66,44 +60,23 @@ class UnsupportedWorkspaceSettingsContribution implements IWorkbenchContribution
 	}
 
 	private showWarning(unsupportedKeys: string[]): void {
-		const message = nls.localize('unsupportedWorkspaceSettings', 'This Workspace contains settings that can only be set in User Settings. ({0})', unsupportedKeys.join(', '));
-
-		const openWorkspaceSettings = new Action('unsupportedWorkspaceSettings.openWorkspaceSettings', nls.localize('openWorkspaceSettings', 'Open Workspace Settings'), '', true, () => {
-			/* __GDPR__
-				"workspace.settings.unsupported.review" : {}
-			*/
-			this.telemetryService.publicLog('workspace.settings.unsupported.review');
-			this.rememberWarningWasShown();
-			return this.preferencesService.openWorkspaceSettings();
-		});
-
-		const openDocumentation = new Action('unsupportedWorkspaceSettings.openDocumentation', nls.localize('openDocumentation', 'Learn More'), '', true, () => {
-			/* __GDPR__
-				"workspace.settings.unsupported.documentation" : {}
-			*/
-			this.telemetryService.publicLog('workspace.settings.unsupported.documentation');
-			this.rememberWarningWasShown();
-			window.open('https://go.microsoft.com/fwlink/?linkid=839878'); // Don't change link.
-			return TPromise.as(true);
-		});
-
-		const close = new Action('unsupportedWorkspaceSettings.Ignore', nls.localize('ignore', 'Ignore'), '', true, () => {
-			/* __GDPR__
-				"workspace.settings.unsupported.ignore" : {}
-			*/
-			this.telemetryService.publicLog('workspace.settings.unsupported.ignore');
-			this.rememberWarningWasShown();
-			return TPromise.as(true);
-		});
-
-		const actions = [openWorkspaceSettings, openDocumentation, close];
-		this.messageService.show(Severity.Warning, { message, actions });
-		/* __GDPR__
-			"workspace.settings.unsupported.warning" : {}
-		*/
-		this.telemetryService.publicLog('workspace.settings.unsupported.warning');
+		this.notificationService.prompt(
+			Severity.Warning,
+			nls.localize('unsupportedWorkspaceSettings', 'This Workspace contains settings that can only be set in User Settings ({0}). Click [here]({1}) to learn more.', unsupportedKeys.join(', '), 'https://go.microsoft.com/fwlink/?linkid=839878'),
+			[{
+				label: nls.localize('openWorkspaceSettings', 'Open Workspace Settings'),
+				run: () => {
+					this.rememberWarningWasShown();
+					this.preferencesService.openWorkspaceSettings();
+				}
+			}, {
+				label: nls.localize('dontShowAgain', 'Don\'t Show Again'),
+				isSecondary: true,
+				run: () => this.rememberWarningWasShown()
+			}]
+		);
 	}
 }
 
-const workbenchRegistry = <IWorkbenchContributionsRegistry>Registry.as(WorkbenchExtensions.Workbench);
+const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench);
 workbenchRegistry.registerWorkbenchContribution(UnsupportedWorkspaceSettingsContribution, LifecyclePhase.Running);

@@ -28,7 +28,7 @@ import { LIGHT, DARK, HIGH_CONTRAST } from 'vs/platform/theme/common/themeServic
 
 export class SelectColorThemeAction extends Action {
 
-	static ID = 'workbench.action.selectTheme';
+	static readonly ID = 'workbench.action.selectTheme';
 	static LABEL = localize('selectTheme.label', "Color Theme");
 
 	constructor(
@@ -50,7 +50,7 @@ export class SelectColorThemeAction extends Action {
 			const picks: IPickOpenEntry[] = [].concat(
 				toEntries(themes.filter(t => t.type === LIGHT), localize('themes.category.light', "light themes")),
 				toEntries(themes.filter(t => t.type === DARK), localize('themes.category.dark', "dark themes"), true),
-				toEntries(themes.filter(t => t.type === HIGH_CONTRAST), localize('themes.category.hc', "high constrast themes"), true),
+				toEntries(themes.filter(t => t.type === HIGH_CONTRAST), localize('themes.category.hc', "high contrast themes"), true),
 				configurationEntries(this.extensionGalleryService, this.viewletService, 'category:themes', localize('installColorThemes', "Install Additional Color Themes..."))
 			);
 
@@ -77,9 +77,9 @@ export class SelectColorThemeAction extends Action {
 
 			return this.quickOpenService.pick(picks, { placeHolder, autoFocus: { autoFocusIndex } })
 				.then(
-				theme => delayer.trigger(() => selectTheme(theme || currentTheme, true), 0),
-				null,
-				theme => delayer.trigger(() => selectTheme(theme, false))
+					theme => delayer.trigger(() => selectTheme(theme || currentTheme, true), 0),
+					null,
+					theme => delayer.trigger(() => selectTheme(theme, false))
 				);
 		});
 	}
@@ -87,7 +87,7 @@ export class SelectColorThemeAction extends Action {
 
 class SelectIconThemeAction extends Action {
 
-	static ID = 'workbench.action.selectIconTheme';
+	static readonly ID = 'workbench.action.selectIconTheme';
 	static LABEL = localize('selectIconTheme.label', "File Icon Theme");
 
 	constructor(
@@ -135,9 +135,9 @@ class SelectIconThemeAction extends Action {
 
 			return this.quickOpenService.pick(picks, { placeHolder, autoFocus: { autoFocusIndex } })
 				.then(
-				theme => delayer.trigger(() => selectTheme(theme || currentTheme, true), 0),
-				null,
-				theme => delayer.trigger(() => selectTheme(theme, false))
+					theme => delayer.trigger(() => selectTheme(theme || currentTheme, true), 0),
+					null,
+					theme => delayer.trigger(() => selectTheme(theme, false))
 				);
 		});
 	}
@@ -171,7 +171,7 @@ function toEntries(themes: (IColorTheme | IFileIconTheme)[], label?: string, bor
 
 class GenerateColorThemeAction extends Action {
 
-	static ID = 'workbench.action.generateColorTheme';
+	static readonly ID = 'workbench.action.generateColorTheme';
 	static LABEL = localize('generateColorTheme.label', "Generate Color Theme From Current Settings");
 
 	constructor(
@@ -185,7 +185,7 @@ class GenerateColorThemeAction extends Action {
 
 	run(): TPromise<any> {
 		let theme = this.themeService.getColorTheme();
-		let colorRegistry = <IColorRegistry>Registry.as(ColorRegistryExtensions.ColorContribution);
+		let colorRegistry = Registry.as<IColorRegistry>(ColorRegistryExtensions.ColorContribution);
 		let resultingColors = {};
 		colorRegistry.getColors().map(c => {
 			let color = theme.getColor(c.id, false);
@@ -198,7 +198,7 @@ class GenerateColorThemeAction extends Action {
 			colors: resultingColors,
 			tokenColors: theme.tokenColors
 		}, null, '\t');
-		return this.editorService.openEditor({ contents, language: 'json' });
+		return this.editorService.openEditor({ contents, language: 'jsonc' });
 	}
 }
 
